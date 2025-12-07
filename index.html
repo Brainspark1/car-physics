@@ -5,9 +5,80 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>three-js-game</title>
+    <style>
+      #controls-panel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        z-index: 1000;
+        display: none;
+      }
+      #controls-panel.show {
+        display: block;
+      }
+      #controls-panel button {
+        margin-top: 10px;
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      #controls-panel button:hover {
+        background: #0056b3;
+      }
+      #death-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        display: none;
+      }
+      #death-panel.show {
+        display: flex;
+      }
+      #death-panel button {
+        margin-top: 20px;
+        padding: 15px 30px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 18px;
+      }
+      #death-panel button:hover {
+        background: #c82333;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
+    <div id="controls-panel" class="show">
+      <h2>Controls</h2>
+      <p>WASD - Move</p>
+      <p>Spacebar - Jump</p>
+      <button id="acknowledge-btn">Got it!</button>
+    </div>
+    <div id="death-panel">
+      <h2 style="font-size: 40px;">You Died</h2>
+      <button id="restart-btn">Try again!</button>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

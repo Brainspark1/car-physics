@@ -64,12 +64,13 @@ scene.add(ground);
 // Obstacles container
 // -----------------------------
 const obstacles = [];
+const deadlyObstacles = [];
 
 // -----------------------------
 // Walls
 // -----------------------------
 const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 });
-const wallHeight = 5;
+const wallHeight = 10;
 const wallThickness = 1;
 
 function createWall(width, height, depth, x, y, z, rotation = { x: 0, y: 0, z: 0 }) {
@@ -126,6 +127,23 @@ const ramp2 = createRamp(-20, -20, Math.PI / 6);
 createRampWall(ramp2, -ramp2.width / 2 - 0.3, -ramp2.length / 2 + 0.1);
 createRampWall(ramp2, ramp2.width / 2 + 0.3, -ramp2.length / 2 + 0.1);
 
+// Additional ramps for jumping over spikes
+const ramp3 = createRamp(0, 35, -Math.PI / 8);
+createRampWall(ramp3, -ramp3.width / 2 - 0.3, -ramp3.length / 2 + 0.1);
+createRampWall(ramp3, ramp3.width / 2 + 0.3, -ramp3.length / 2 + 0.1);
+
+const ramp4 = createRamp(35, 0, Math.PI / 8);
+createRampWall(ramp4, -ramp4.width / 2 - 0.3, -ramp4.length / 2 + 0.1);
+createRampWall(ramp4, ramp4.width / 2 + 0.3, -ramp4.length / 2 + 0.1);
+
+const ramp5 = createRamp(0, -35, Math.PI / 8);
+createRampWall(ramp5, -ramp5.width / 2 - 0.3, -ramp5.length / 2 + 0.1);
+createRampWall(ramp5, ramp5.width / 2 + 0.3, -ramp5.length / 2 + 0.1);
+
+const ramp6 = createRamp(-35, 0, -Math.PI / 8);
+createRampWall(ramp6, -ramp6.width / 2 - 0.3, -ramp6.length / 2 + 0.1);
+createRampWall(ramp6, ramp6.width / 2 + 0.3, -ramp6.length / 2 + 0.1);
+
 // -----------------------------
 // Cones
 // -----------------------------
@@ -142,19 +160,49 @@ addCone(-10, -10);
 addCone(0, 30);
 
 // -----------------------------
-// Path
+// Spikes (Deadly Obstacles)
+// -----------------------------
+const spikeMaterial = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+const spikeGeometry = new THREE.ConeGeometry(0.3, 3, 8);
+function addSpike(x, z) {
+    const spike = new THREE.Mesh(spikeGeometry, spikeMaterial);
+    spike.position.set(x, 1.5, z);
+    scene.add(spike);
+    deadlyObstacles.push(spike);
+}
+
+// Place spikes along the path
+addSpike(-30, 10);
+addSpike(-10, 30);
+addSpike(10, 30);
+addSpike(30, 10);
+addSpike(30, -10);
+addSpike(10, -30);
+addSpike(-10, -30);
+addSpike(-30, -10);
+
+// -----------------------------
+// Path (Enhanced Level Loop)
 // -----------------------------
 const pathMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
 const pathPoints = [
-    new THREE.Vector3(-40, 0.1, 0),
+    new THREE.Vector3(-40, 0.1, 0), // Start
+    new THREE.Vector3(-30, 0.1, 10),
     new THREE.Vector3(-20, 0.1, 20),
+    new THREE.Vector3(-10, 0.1, 30),
     new THREE.Vector3(0, 0.1, 40),
+    new THREE.Vector3(10, 0.1, 30),
     new THREE.Vector3(20, 0.1, 20),
+    new THREE.Vector3(30, 0.1, 10),
     new THREE.Vector3(40, 0.1, 0),
+    new THREE.Vector3(30, 0.1, -10),
     new THREE.Vector3(20, 0.1, -20),
+    new THREE.Vector3(10, 0.1, -30),
     new THREE.Vector3(0, 0.1, -40),
+    new THREE.Vector3(-10, 0.1, -30),
     new THREE.Vector3(-20, 0.1, -20),
-    new THREE.Vector3(-40, 0.1, 0)
+    new THREE.Vector3(-30, 0.1, -10),
+    new THREE.Vector3(-40, 0.1, 0) // Back to start
 ];
 const pathGeometry = new THREE.BufferGeometry().setFromPoints(pathPoints);
 scene.add(new THREE.Line(pathGeometry, pathMaterial));
@@ -168,11 +216,21 @@ const carLength = 4;
 const carGeometry = new THREE.BoxGeometry(carWidth, carHeight, carLength);
 const carMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
 const car = new THREE.Mesh(carGeometry, carMaterial);
-car.position.set(0, carHeight / 2, 5);
+const startPosition = new THREE.Vector3(-40, carHeight / 2, 0);
+car.position.copy(startPosition);
 scene.add(car);
 
 camera.position.set(0, 10, 20);
 camera.lookAt(car.position);
+
+// -----------------------------
+// Restart System
+// -----------------------------
+function resetCar() {
+    car.position.copy(startPosition);
+    car.rotation.set(0, 0, 0);
+    velocity.set(0, 0, 0);
+}
 
 // -----------------------------
 // Physics state
@@ -181,15 +239,15 @@ let velocity = new THREE.Vector3(0, 0, 0);
 let throttle = 0;
 let steering = 0;
 
-const maxSpeed = 1.2;
-const accelerationRate = 0.02;
-const brakingRate = 0.04;
-const reverseRate = 0.01;
-const frictionGround = 0.96;
+const maxSpeed = 1.5;
+const accelerationRate = 0.1;
+const brakingRate = 0.1;
+const reverseRate = 0.45;
+const frictionGround = 0.85;
 const airDrag = 0.995;
 const gravity = -0.015;
 const restitution = 0.3;
-const jumpForce = 0.35;
+const jumpForce = 0.4;
 const deltaTime = 1/60;
 
 // -----------------------------
@@ -225,8 +283,8 @@ function resolveCollisionsAndMove(dt) {
     if (keys['ArrowDown'] || keys['KeyS']) forwardAccel -= brakingRate;
 
     let turn = 0;
-    if (keys['ArrowLeft'] || keys['KeyA']) turn += 0.035;
-    if (keys['ArrowRight'] || keys['KeyD']) turn -= 0.035;
+    if (keys['ArrowLeft'] || keys['KeyA']) turn += 0.065; // Reduced from 0.035 for smaller turning radius
+    if (keys['ArrowRight'] || keys['KeyD']) turn -= 0.065;
 
     const speedForward = velocity.dot(forwardLocal);
     if (Math.abs(speedForward) > 0.02) {
@@ -237,7 +295,12 @@ function resolveCollisionsAndMove(dt) {
     const forward = new THREE.Vector3(0,0,-1).applyQuaternion(car.quaternion);
     velocity.add(forward.multiplyScalar(forwardAccel));
 
-    velocity.multiplyScalar(airDrag);
+    // Apply ground friction for more control
+    if (car.position.y <= carHeight/2 + 0.01) {
+        velocity.multiplyScalar(frictionGround);
+    } else {
+        velocity.multiplyScalar(airDrag);
+    }
     if (velocity.length() > maxSpeed) velocity.setLength(maxSpeed);
 
     // Jump
@@ -254,6 +317,16 @@ function resolveCollisionsAndMove(dt) {
         if (carAABB.intersectsBox(objBox)) {
             const mtv = getMTV(carAABB, objBox);
             if (mtv && mtv.length() > combinedMTV.length()) combinedMTV.copy(mtv);
+        }
+    }
+
+    // Check for deadly obstacles (spikes)
+    for (const spike of deadlyObstacles) {
+        const spikeBox = computeAABB(spike);
+        if (carAABB.intersectsBox(spikeBox)) {
+            showDeathPanel();
+            resetCar();
+            break; // Reset once per frame
         }
     }
 
@@ -276,7 +349,7 @@ function resolveCollisionsAndMove(dt) {
 
     // Gravity & ramps
     let onAnyRamp = false;
-    const ramps = [ramp1.mesh, ramp2.mesh];
+    const ramps = [ramp1.mesh, ramp2.mesh, ramp3.mesh, ramp4.mesh, ramp5.mesh, ramp6.mesh];
     for (const r of ramps) {
         const rampBox = computeAABB(r);
         rampBox.min.x -= 0.5; rampBox.max.x += 0.5;
@@ -333,10 +406,44 @@ function animate() {
 animate();
 
 // -----------------------------
+// Controls Panel
+// -----------------------------
+const controlsPanel = document.getElementById('controls-panel');
+const acknowledgeBtn = document.getElementById('acknowledge-btn');
+
+if (!localStorage.getItem('controlsAcknowledged')) {
+    controlsPanel.classList.add('show');
+}
+
+acknowledgeBtn.addEventListener('click', () => {
+    controlsPanel.classList.remove('show');
+    localStorage.setItem('controlsAcknowledged', 'true');
+});
+
+// -----------------------------
+// Death Panel
+// -----------------------------
+const deathPanel = document.getElementById('death-panel');
+const restartBtn = document.getElementById('restart-btn');
+
+function showDeathPanel() {
+    deathPanel.classList.add('show');
+}
+
+function hideDeathPanel() {
+    deathPanel.classList.remove('show');
+}
+
+restartBtn.addEventListener('click', () => {
+    hideDeathPanel();
+    resetCar();
+});
+
+// -----------------------------
 // Resize
 // -----------------------------
 window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = window.innerWidth / window.innerWidth;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });

@@ -1,15 +1,13 @@
-# TODO: Simple Car Physics Game with Three.js (Vite Project)
+# Revamp 3D Car Game Plan
 
-- [x] Initialize new Vite project in current directory with vanilla template.
-- [x] Install dependencies.
-- [x] Move and adapt existing game code into Vite structure (src/main.js, update index.html).
-- [x] Run Vite dev server to test the game.
-- [x] Add obstacles: ramps and traffic cones with crash physics.
-- [x] Add walls around the edge with crash physics.
-- [x] Create a path for the car to follow.
-- [x] Add gravity and jumping physics for ramps.
-- [x] Allow climbing ramps at any speed.
-- [x] Add side walls to ramps with crash physics.
-- [x] Make side walls span the full length of the ramps.
-- [x] Adjust car rotation to match ramp incline when climbing.
-- [ ] Add a speedometer to display current car speed.
+- [x] Revamp car physics for more realistic movement (increase friction, adjust steering)
+- [x] Enhance path to a level loop with more segments
+- [x] Add ramps near spikes for jumping over them
+- [x] Add conical spikes along the path as deadly obstacles
+- [x] Implement restart on spike collision
+- [x] Add controls panel overlay with localStorage
+- [x] Add finer car controls for careful movement
+- [x] Add "You Died" panel on spike collision
+- [x] Increase wall height
+- [x] Reduce car turning radius for better control
+- [x] Revamp death panel to full screen with restart button
